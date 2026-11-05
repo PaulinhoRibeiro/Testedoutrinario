@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnóstico Doutrinário Básico - IASD</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f4f8;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 20px;
+            color: #1a2a3a;
+        }
+
+        .quiz-container {
+            background-color: #ffffff;
+            max-width: 760px;
+            width: 100%;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 30px 25px;
+        }
+
+        button {
+            display: block; width: 100%; padding: 15px;
+            border: none; border-radius: 12px;
+            font-size: 1.05rem; font-weight: 600; cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            font-family: inherit;
+        }
+        button:active { transform: scale(0.98); }
+        button:disabled { opacity: 0.45; cursor: not-allowed; }
+        .btn-primary { background-color: #1e6f9f; color: white; }
+        .btn-primary:hover:not(:disabled) { background-color: #155a82; }
+        .btn-secondary { background-color: #e0e9f0; color: #1a2a3a; }
+        .btn-secondary:hover:not(:disabled) { background-color: #cbd8e3; }
+        .btn-danger { background-color: #fbe4e4; color: #a02020; }
+        .btn-danger:hover:not(:disabled) { background-color: #f5caca; }
+        .btn-sm { padding: 10px 14px; font-size: 0.92rem; }
+
+        #intro-screen h1 {
+            font-size: 1.75rem; color: #0b3b5c;
+            margin-bottom: 10px; text-align: center;
+        }
+        #intro-screen .subtitle {
+            text-align: center; color: #4a6f8a;
+            font-size: 0.95rem; margin-bottom: 25px; line-height: 1.5;
+        }
+        .info-box {
+            background-color: #e9f2f9; border-left: 5px solid #2a7ab0;
+            padding: 15px; border-radius: 8px; margin-bottom: 20px;
+            font-size: 0.95rem; line-height: 1.55;
+        }
+        .info-box ul { margin-left: 20px; margin-top: 8px; }
+        .info-box li { margin-bottom: 5px; }
+        .actions-stack { display: flex; flex-direction: column; gap: 10px; }
+
+        #quiz-screen { display: none; }
+        .progress-bar {
+            width: 100%; height: 8px; background-color: #dbe6ee;
+            border-radius: 10px; margin-bottom: 20px; overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%; background-color: #2a7ab0; width: 0%;
+            transition: width 0.3s ease;
+        }
+        .question-counter {
+            font-size: 0.85rem; color: #6b8a9f;
+            margin-bottom: 10px; text-align: right;
+        }
+        .question-text {
+            font-size: 1.2rem; font-weight: 600; margin-bottom: 20px;
+            line-height: 1.45; color: #0b3b5c;
+        }
+        .options { display: flex; flex-direction: column; gap: 12px; margin-bottom: 25px; }
+        .option {
+            background-color: #f7fafc; border: 2px solid #d0dee9;
+            border-radius: 12px; padding: 14px 18px; font-size: 1rem;
+            cursor: pointer; transition: background-color 0.2s, border-color 0.2s;
+            line-height: 1.4;
+        }
+        .option:hover { background-color: #e9f2f9; border-color: #2a7ab0; }
+        .option.selected {
+            background-color: #d4e7f5; border-color: #1e6f9f; font-weight: 500;
+        }
+        .nav-buttons { display: flex; gap: 10px; }
+        .nav-buttons button { flex: 1; }
+
+        #result-screen { display: none; text-align: center; }
+        #result-screen h2 { font-size: 1.6rem; color: #0b3b5c; margin-bottom: 15px; }
+        .score-circle {
+            width: 130px; height: 130px; border-radius: 50%;
+            background-color: #1e6f9f; color: white;
+            display: flex; flex-direction: column; justify-content: center;
+            align-items: center; margin: 0 auto 20px; font-weight: bold;
+            box-shadow: 0 5px 15px rgba(30, 111, 159, 0.4);
+        }
+        .score-number { font-size: 2.5rem; line-height: 1; }
+        .score-total { font-size: 1rem; opacity: 0.8; }
+        .feedback-message {
+            font-size: 1.05rem; margin-bottom: 20px; padding: 15px;
+            border-radius: 10px; background-color: #f0f8ff; line-height: 1.5;
+        }
+        .details {
+            text-align: left; font-size: 0.9rem; color: #4a6f8a;
+            background-color: #f7fafc; padding: 15px; border-radius: 10px;
+            margin-bottom: 20px; max-height: 260px; overflow-y: auto;
+        }
+        .details .item { padding: 6px 0; border-bottom: 1px dashed #dbe6ee; }
+        .details .item:last-child { border-bottom: none; }
+        .details .item strong { color: #1a2a3a; }
+        .details em { color: #1e6f9f; }
+
+        #dashboard-screen { display: none; }
+        .dash-title {
+            font-size: 1.55rem; color: #0b3b5c; text-align: center;
+            margin-bottom: 6px;
+        }
+        .dash-sub {
+            text-align: center; color: #6b8a9f; font-size: 0.88rem;
+            margin-bottom: 20px; line-height: 1.4;
+        }
+
+        .stats-row {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 10px; margin-bottom: 25px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #1e6f9f, #2a7ab0);
+            color: white; border-radius: 14px; padding: 16px 10px;
+            text-align: center;
+        }
+        .stat-value { font-size: 1.9rem; font-weight: bold; line-height: 1.1; }
+        .stat-label { font-size: 0.78rem; opacity: 0.9; margin-top: 4px; line-height: 1.2; }
+        .stat-card.alt { background: linear-gradient(135deg, #0b3b5c, #155a82); }
+        .stat-card.gold { background: linear-gradient(135deg, #b8860b, #d4a017); }
+
+        .section-title {
+            font-size: 1.05rem; font-weight: 700; color: #0b3b5c;
+            margin: 22px 0 12px; padding-bottom: 6px;
+            border-bottom: 2px solid #dbe6ee;
+        }
+
+        .chart-row {
+            display: flex; align-items: center; gap: 8px;
+            margin-bottom: 8px; font-size: 0.85rem;
+        }
+        .chart-label { width: 78px; color: #4a6f8a; flex-shrink: 0; }
+        .chart-track {
+            flex: 1; height: 18px; background-color: #eef3f8;
+            border-radius: 6px; overflow: hidden; position: relative;
+        }
+        .chart-fill {
+            height: 100%; border-radius: 6px;
+            transition: width 0.4s ease;
+            display: flex; align-items: center; justify-content: flex-end;
+            padding-right: 5px; color: white; font-size: 0.72rem;
+            font-weight: 600; min-width: 20px;
+        }
+        .chart-pct {
+            width: 46px; text-align: right; flex-shrink: 0;
+            font-weight: 600; color: #1a2a3a;
+        }
+
+        .missed-list { display: flex; flex-direction: column; gap: 10px; }
+        .missed-card {
+            background-color: #f7fafc; border-left: 4px solid #c62828;
+            border-radius: 8px; padding: 12px 14px; font-size: 0.88rem;
+            line-height: 1.45;
+        }
+        .missed-card .missed-q {
+            font-weight: 700; color: #0b3b5c; margin-bottom: 4px;
+        }
+        .missed-card .missed-correct { color: #2e7d32; }
+        .missed-card .missed-wrong { color: #c62828; }
+
+        .empty-state {
+            text-align: center; padding: 40px 20px; color: #6b8a9f;
+            font-size: 0.95rem; line-height: 1.6;
+        }
+
+        .dash-actions {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+            margin-top: 25px;
+        }
+        .dash-actions .full { grid-column: span 2; }
+
+        .dash-footer {
+            margin-top: 18px; font-size: 0.78rem; color: #6b8a9f;
+            text-align: center; line-height: 1.5;
+            background-color: #f7fafc; padding: 10px; border-radius: 8px;
+        }
+
+        @media (max-width: 520px) {
+            .quiz-container { padding: 20px 15px; }
+            #intro-screen h1 { font-size: 1.4rem; }
+            .question-text { font-size: 1.05rem; }
+            .option { font-size: 0.93rem; padding: 12px 14px; }
+            .stats-row { grid-template-columns: 1fr; }
+            .dash-actions { grid-template-columns: 1fr; }
+            .dash-actions .full { grid-column: span 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="quiz-container">
+
+        <!-- ============ INTRO ============ -->
+        <div id="intro-screen">
+            <h1>📖 Diagnóstico Doutrinário Básico</h1>
+            <p class="subtitle">Igreja Adventista do Sétimo Dia — Nível básico</p>
+
+            <div class="info-box">
+                <strong>ℹ️ Sobre o teste</strong>
+                <ul>
+                    <li>Teste <strong>anônimo</strong>: nenhum nome ou dado pessoal é coletado.</li>
+                    <li><strong>12 perguntas</strong> sobre as doutrinas básicas da igreja.</li>
+                    <li>Ao final, sua resposta é registrada anonimamente para o relatório da igreja.</li>
+                    <li>Responda com sinceridade — o objetivo é conhecer o nível do grupo e planejar estudos.</li>
+                </ul>
+            </div>
+
+            <div class="actions-stack">
+                <button class="btn-primary" onclick="startQuiz()">Iniciar Teste</button>
+                <button class="btn-secondary" id="btn-open-dashboard" onclick="openDashboard()">
+                    📊 Ver Relatório da Igreja
+                </button>
+            </div>
+        </div>
+
+        <!-- ============ QUIZ ============ -->
+        <div id="quiz-screen">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <div class="question-counter" id="question-counter">Pergunta 1 de 12</div>
+            <div class="question-text" id="question-text">Carregando pergunta...</div>
+            <div class="options" id="options-container"></div>
+            <div class="nav-buttons">
+                <button class="btn-secondary" id="btn-prev" onclick="prevQuestion()" disabled>Anterior</button>
+                <button class="btn-primary" id="btn-next" onclick="nextQuestion()">Próxima</button>
+            </div>
+        </div>
+
+        <!-- ============ RESULTADO ============ -->
+        <div id="result-screen">
+            <h2>✅ Teste Concluído!</h2>
+            <div class="score-circle">
+                <span class="score-number" id="score-number">0</span>
+                <span class="score-total" id="score-total">/ 12</span>
+            </div>
+            <div class="feedback-message" id="feedback-message"></div>
+            <div class="details" id="details"></div>
+            <div class="actions-stack">
+                <button class="btn-primary" onclick="openDashboard()">📊 Ver Relatório da Igreja</button>
+                <button class="btn-secondary" onclick="restartQuiz()">Refazer o Teste</button>
+            </div>
+        </div>
+
+        <!-- ============ DASHBOARD ============ -->
+        <div id="dashboard-screen">
+            <h2 class="dash-title">📊 Relatório Doutrinário</h2>
+            <p class="dash-sub">Dados anônimos salvos neste dispositivo. Use Exportar/Importar CSV para consolidar com outros.</p>
+            <div id="dashboard-content"></div>
+        </div>
+    </div>
+
+    <input type="file" id="import-file" accept=".csv" style="display:none" onchange="importCSV(event)">
+
+    <script>
+        // ============================================================
+        // PERGUNTAS — DOUTRINA BÁSICA ADVENTISTA
+        // ============================================================
+        const questions = [
+            {
+                question: "1. Qual é a única regra de fé e prática para o adventista do sétimo dia?",
+                options: [
+                    "As tradições da igreja e os concílios.",
+                    "A Bíblia Sagrada, como Palavra de Deus inspirada.",
+                    "Os escritos de Ellen G. White, acima da Bíblia.",
+                    "As decisões da Conferência Geral."
+                ],
+                correct: 1
+            },
+            {
+                question: "2. Em quantas pessoas distintas a doutrina da Trindade apresenta a Divindade?",
+                options: [
+                    "Uma pessoa: Deus Pai.",
+                    "Duas pessoas: o Pai e o Filho.",
+                    "Três pessoas: Pai, Filho e Espírito Santo.",
+                    "Três deuses independentes."
+                ],
+                correct: 2
+            },
+            {
+                question: "3. Qual é o dia bíblico de repouso (sábado) segundo a doutrina adventista?",
+                options: [
+                    "O primeiro dia da semana (domingo).",
+                    "O sétimo dia da semana, de pôr do sol a pôr do sol.",
+                    "Qualquer dia escolhido pelo crente.",
+                    "Apenas os dias de festas judaicas."
+                ],
+                correct: 1
+            },
+            {
+                question: "4. O que a Bíblia ensina sobre o estado da pessoa após a morte?",
+                options: [
+                    "A alma vai imediatamente para o céu ou para o inferno.",
+                    "A pessoa dorme inconsciente até a ressurreição.",
+                    "A alma reencarna em outro corpo.",
+                    "A pessoa se torna um espírito que se comunica com os vivos."
+                ],
+                correct: 1
+            },
+            {
+                question: "5. Como a Igreja Adventista entende o dom de profecia em relação a Ellen G. White?",
+                options: [
+                    "Ela foi uma profetisa cujos escritos têm autoridade igual à Bíblia.",
+                    "Ela foi uma líder administrativa, sem o dom profético.",
+                    "Ela foi mensageira do Senhor; seus escritos orientam, mas a Bíblia é a autoridade suprema.",
+                    "O dom de profecia cessou na era apostólica."
+                ],
+                correct: 2
+            },
+            {
+                question: "6. Qual é o meio estabelecido por Deus para a salvação do ser humano?",
+                options: [
+                    "A obediência perfeita aos Dez Mandamentos.",
+                    "A graça de Deus mediante a fé em Jesus Cristo.",
+                    "A participação fiel nos rituais da igreja.",
+                    "A prática de boas obras e caridade."
+                ],
+                correct: 1
+            },
+            {
+                question: "7. Como a Igreja Adventista pratica o batismo?",
+                options: [
+                    "Por aspersão de água na cabeça de bebês.",
+                    "Por imersão, após confissão de fé e arrependimento.",
+                    "Por derramamento de água sobre a testa do crente.",
+                    "O batismo não é considerado essencial."
+                ],
+                correct: 1
+            },
+            {
+                question: "8. Qual é a expectativa adventista quanto à segunda vinda de Cristo?",
+                options: [
+                    "Será um evento secreto, apenas para os salvos.",
+                    "Já ocorreu espiritualmente no coração dos fiéis.",
+                    "Será literal, visível, audível e em breve.",
+                    "Será precedida por um período de paz mundial."
+                ],
+                correct: 2
+            },
+            {
+                question: "9. Qual é a posição adventista sobre a Lei de Deus, incluindo o mandamento do sábado?",
+                options: [
+                    "Foi abolida na cruz e não tem mais validade.",
+                    "Permanece válida como norma de vida para os cristãos; a salvação é pela graça.",
+                    "Apenas os nove primeiros mandamentos são válidos.",
+                    "Cada crente pode escolher quais mandamentos seguir."
+                ],
+                correct: 1
+            },
+            {
+                question: "10. O que a doutrina do milênio ensina, segundo a IASD?",
+                options: [
+                    "Cristo reinará na terra por mil anos, com os ímpios vivos.",
+                    "Os santos reinarão com Cristo no céu durante mil anos, e a terra ficará desolada.",
+                    "O milênio é um período simbólico de paz espiritual na igreja.",
+                    "O milênio já está em andamento desde a ressurreição de Cristo."
+                ],
+                correct: 1
+            },
+            {
+                question: "11. Como a Igreja Adventista entende a criação do mundo?",
+                options: [
+                    "Evolução ao longo de milhões de anos, guiada por Deus.",
+                    "Criação literal em seis dias, seguida de um sétimo dia de descanso.",
+                    "Um mito simbólico sem valor histórico.",
+                    "Criação instantânea em um único dia, sem os seis dias descritos em Gênesis."
+                ],
+                correct: 1
+            },
+            {
+                question: "12. Qual é a posição adventista sobre o dízimo?",
+                options: [
+                    "Era uma prática apenas do Antigo Testamento e não se aplica hoje.",
+                    "É uma contribuição opcional, sem base bíblica para os cristãos.",
+                    "É uma prática bíblica: a décima parte da renda é devolvida a Deus para a obra da igreja.",
+                    "Cada membro decide livremente o percentual, sendo o dízimo apenas uma sugestão."
+                ],
+                correct: 2
+            }
+        ];
+
+        const STORAGE_KEY = 'iasd_doutrina_quiz_v1';
+
+        // ============================================================
+        // ESTADO
+        // ============================================================
+        let currentQuestionIndex = 0;
+        let userAnswers = new Array(questions.length).fill(null);
+        let resultSaved = false;
+        let memoryStore = null;
+
+        // ============================================================
+        // ELEMENTOS
+        // ============================================================
+        const introScreen = document.getElementById('intro-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const dashboardScreen = document.getElementById('dashboard-screen');
+        const progressFill = document.getElementById('progress-fill');
+        const questionCounter = document.getElementById('question-counter');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const btnPrev = document.getElementById('btn-prev');
+        const btnNext = document.getElementById('btn-next');
+        const scoreNumber = document.getElementById('score-number');
+        const scoreTotal = document.getElementById('score-total');
+        const feedbackMessage = document.getElementById('feedback-message');
+        const details = document.getElementById('details');
+        const dashboardContent = document.getElementById('dashboard-content');
+        const btnOpenDashboard = document.getElementById('btn-open-dashboard');
+
+        // ============================================================
+        // STORAGE
+        // ============================================================
+        function loadResults() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                return raw ? JSON.parse(raw) : [];
+            } catch (e) { return memoryStore || []; }
+        }
+        function saveResults(results) {
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(results)); }
+            catch (e) { memoryStore = results; }
+        }
+        function addResult(answers, score) {
+            const results = loadResults();
+            results.push({
+                id: Date.now() + '-' + Math.random().toString(36).slice(2, 8),
+                timestamp: new Date().toISOString(),
+                answers: [...answers],
+                score: score
+            });
+            saveResults(results);
+        }
+        function clearResults() {
+            if (!confirm('Apagar TODOS os resultados salvos neste dispositivo? Esta ação não pode ser desfeita.')) return;
+            saveResults([]); memoryStore = [];
+            renderDashboard(); updateDashboardBadge();
+        }
+
+        // ============================================================
+        // QUIZ
+        // ============================================================
+        function startQuiz() {
+            introScreen.style.display = 'none';
+            dashboardScreen.style.display = 'none';
+            quizScreen.style.display = 'block';
+            resultScreen.style.display = 'none';
+            currentQuestionIndex = 0;
+            userAnswers.fill(null);
+            resultSaved = false;
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const q = questions[currentQuestionIndex];
+            questionCounter.textContent = `Pergunta ${currentQuestionIndex + 1} de ${questions.length}`;
+            progressFill.style.width = `${((currentQuestionIndex + 1) / questions.length) * 100}%`;
+            questionText.textContent = q.question;
+
+            optionsContainer.innerHTML = '';
+            q.options.forEach((option, index) => {
+                const div = document.createElement('div');
+                div.className = 'option';
+                div.textContent = option;
+                if (userAnswers[currentQuestionIndex] === index) div.classList.add('selected');
+                div.addEventListener('click', () => selectOption(index));
+                optionsContainer.appendChild(div);
+            });
+
+            btnPrev.disabled = currentQuestionIndex === 0;
+            btnNext.textContent = currentQuestionIndex === questions.length - 1 ? 'Ver Resultado' : 'Próxima';
+            btnNext.disabled = userAnswers[currentQuestionIndex] === null;
+        }
+
+        function selectOption(index) {
+            userAnswers[currentQuestionIndex] = index;
+            optionsContainer.querySelectorAll('.option').forEach((opt, i) => {
+                opt.classList.toggle('selected', i === index);
+            });
+            btnNext.disabled = false;
+        }
+
+        function nextQuestion() {
+            if (userAnswers[currentQuestionIndex] === null) return;
+            if (currentQuestionIndex < questions.length - 1) {
+                currentQuestionIndex++;
+                renderQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                renderQuestion();
+            }
+        }
+
+        function showResult() {
+            quizScreen.style.display = 'none';
+            resultScreen.style.display = 'block';
+
+            let score = 0;
+            userAnswers.forEach((a, i) => { if (a === questions[i].correct) score++; });
+
+            if (!resultSaved) {
+                addResult(userAnswers, score);
+                resultSaved = true;
+                updateDashboardBadge();
+            }
+
+            scoreNumber.textContent = score;
+            scoreTotal.textContent = `/ ${questions.length}`;
+
+            const pct = (score / questions.length) * 100;
+            let msg = '';
+            if (pct >= 90) msg = '🌟 Excelente! Seu conhecimento doutrinário está muito sólido. Continue crescendo e compartilhando o que sabe.';
+            else if (pct >= 70) msg = '📘 Muito bom! Você tem uma base forte. Aproveite para revisar os pontos que errou e aprofundar-se.';
+            else if (pct >= 50) msg = '📖 Bom começo! Há uma base, mas alguns pontos importantes precisam ser reforçados. Considere participar de um estudo bíblico.';
+            else msg = '🌱 Que bom que você participou! Este é um ótimo ponto de partida. Busque conhecer mais as doutrinas bíblicas com a ajuda de um líder ou da classe bíblica.';
+
+            feedbackMessage.textContent = msg;
+
+            let html = '<strong>Resumo das suas respostas:</strong><br><br>';
+            userAnswers.forEach((answer, index) => {
+                const ok = answer === questions[index].correct;
+                const letter = String.fromCharCode(65 + questions[index].correct);
+                const txt = questions[index].options[questions[index].correct];
+                html += `<div class="item">${ok ? '✅' : '❌'} <strong>Pergunta ${index + 1}:</strong> ` +
+                        (ok ? 'Acertou' : `Errou — correta: <em>${letter}) ${txt}</em>`) + '</div>';
+            });
+            details.innerHTML = html;
+        }
+
+        function restartQuiz() {
+            resultScreen.style.display = 'none';
+            introScreen.style.display = 'block';
+            currentQuestionIndex = 0;
+            userAnswers.fill(null);
+            resultSaved = false;
+            progressFill.style.width = '0%';
+            updateDashboardBadge();
+        }
+
+        // ============================================================
+        // DASHBOARD
+        // ============================================================
+        function openDashboard() {
+            introScreen.style.display = 'none';
+            quizScreen.style.display = 'none';
+            resultScreen.style.display = 'none';
+            dashboardScreen.style.display = 'block';
+            renderDashboard();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function backToIntro() {
+            dashboardScreen.style.display = 'none';
+            introScreen.style.display = 'block';
+            updateDashboardBadge();
+        }
+
+        function updateDashboardBadge() {
+            const n = loadResults().length;
+            btnOpenDashboard.textContent = n > 0
+                ? `📊 Ver Relatório da Igreja (${n})`
+                : '📊 Ver Relatório da Igreja';
+        }
+
+        function barColor(pct) {
+            if (pct >= 70) return '#2e7d32';
+            if (pct >= 40) return '#f9a825';
+            return '#c62828';
+        }
+
+        function levelLabel(pct) {
+            if (pct >= 85) return 'Sólido';
+            if (pct >= 65) return 'Bom';
+            if (pct >= 45) return 'Em construção';
+            return 'Precisa de atenção';
+        }
+
+        function renderDashboard() {
+            const results = loadResults();
+            const total = results.length;
+
+            if (total === 0) {
+                dashboardContent.innerHTML = `
+                    <div class="empty-state">
+                        <div style="font-size:2.5rem;margin-bottom:10px">📭</div>
+                        <strong>Nenhuma resposta registrada ainda.</strong><br>
+                        Aplique o teste na igreja e volte aqui para ver o relatório.<br><br>
+                        <button class="btn-secondary btn-sm" onclick="backToIntro()" style="max-width:220px;margin:0 auto">Voltar</button>
+                    </div>`;
+                return;
+            }
+
+            // Estatísticas gerais
+            const scores = results.map(r => r.score);
+            const avg = (scores.reduce((a, b) => a + b, 0) / total).toFixed(1);
+            const overallAccuracy = ((scores.reduce((a, b) => a + b, 0) / (total * questions.length)) * 100).toFixed(0);
+
+            // Faixas de pontuação (12 questões)
+            const buckets = [
+                { label: '0–3',   min: 0,  max: 3 },
+                { label: '4–6',   min: 4,  max: 6 },
+                { label: '7–9',   min: 7,  max: 9 },
+                { label: '10–12', min: 10, max: 12 }
+            ];
+            const bucketCounts = buckets.map(b => scores.filter(s => s >= b.min && s <= b.max).length);
+            const maxBucket = Math.max(...bucketCounts, 1);
+
+            let distHTML = buckets.map((b, i) => {
+                const c = bucketCounts[i];
+                const w = (c / maxBucket) * 100;
+                return `<div class="chart-row">
+                    <span class="chart-label">${b.label} pts</span>
+                    <div class="chart-track">
+                        <div class="chart-fill" style="width:${w}%;background:#2a7ab0">${c > 0 ? c : ''}</div>
+                    </div>
+                    <span class="chart-pct">${c}</span>
+                </div>`;
+            }).join('');
+
+            // Acerto por pergunta
+            const perQuestion = questions.map((q, i) => {
+                const answerCounts = new Array(q.options.length).fill(0);
+                let correctCount = 0;
+                results.forEach(r => {
+                    const a = r.answers[i];
+                    if (a !== null && a !== undefined && a >= 0 && a < q.options.length) {
+                        answerCounts[a]++;
+                        if (a === q.correct) correctCount++;
+                    }
+                });
+                let mostCommonWrong = -1, maxWrong = 0;
+                answerCounts.forEach((c, idx) => {
+                    if (idx !== q.correct && c > maxWrong) { maxWrong = c; mostCommonWrong = idx; }
+                });
+                return {
+                    index: i,
+                    question: q.question,
+                    correctText: q.options[q.correct],
+                    accuracy: total ? (correctCount / total) * 100 : 0,
+                    correctCount,
+                    mostCommonWrong,
+                    mostCommonWrongText: mostCommonWrong >= 0 ? q.options[mostCommonWrong] : null,
+                    mostCommonWrongCount: maxWrong
+                };
+            });
+
+            const perQHTML = perQuestion.map(pq => `
+                <div class="chart-row">
+                    <span class="chart-label">P${pq.index + 1}</span>
+                    <div class="chart-track">
+                        <div class="chart-fill" style="width:${Math.max(pq.accuracy, 2)}%;background:${barColor(pq.accuracy)}">
+                            ${pq.accuracy >= 15 ? pq.accuracy.toFixed(0) + '%' : ''}
+                        </div>
+                    </div>
+                    <span class="chart-pct">${pq.accuracy.toFixed(0)}%</span>
+                </div>
+            `).join('');
+
+            // Top 5 mais erradas
+            const mostMissed = [...perQuestion]
+                .filter(pq => pq.accuracy < 100)
+                .sort((a, b) => a.accuracy - b.accuracy)
+                .slice(0, 5);
+
+            let missedHTML = '';
+            if (mostMissed.length === 0) {
+                missedHTML = '<div class="empty-state" style="padding:15px">🎉 Todos acertaram todas as perguntas! Incrível.</div>';
+            } else {
+                missedHTML = mostMissed.map(pq => `
+                    <div class="missed-card">
+                        <div class="missed-q">${pq.question}</div>
+                        <div class="missed-correct">✅ Correta: <strong>${pq.correctText}</strong></div>
+                        ${pq.mostCommonWrongText
+                            ? `<div class="missed-wrong">⚠️ Erro mais comum: <em>${pq.mostCommonWrongText}</em> (${pq.mostCommonWrongCount} pessoa${pq.mostCommonWrongCount === 1 ? '' : 's'})</div>`
+                            : ''}
+                        <div style="margin-top:4px;font-size:0.8rem;color:#6b8a9f">
+                            Acerto: ${pq.correctCount}/${total} (${pq.accuracy.toFixed(0)}%)
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Nível geral (texto)
+            const overallPct = parseFloat(overallAccuracy);
+            const nivel = levelLabel(overallPct);
+
+            dashboardContent.innerHTML = `
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-value">${total}</div>
+                        <div class="stat-label">Respostas</div>
+                    </div>
+                    <div class="stat-card alt">
+                        <div class="stat-value">${avg}</div>
+                        <div class="stat-label">Média (de ${questions.length})</div>
+                    </div>
+                    <div class="stat-card gold">
+                        <div class="stat-value">${overallAccuracy}%</div>
+                        <div class="stat-label">Nível: ${nivel}</div>
+                    </div>
+                </div>
+
+                <h3 class="section-title">📈 Distribuição das pontuações</h3>
+                ${distHTML}
+
+                <h3 class="section-title">📋 Acerto por pergunta</h3>
+                ${perQHTML}
+
+                <h3 class="section-title">🎯 Perguntas mais erradas</h3>
+                <div class="missed-list">${missedHTML}</div>
+
+                <div class="dash-actions">
+                    <button class="btn-primary btn-sm" onclick="exportCSV()">⬇️ Exportar CSV</button>
+                    <button class="btn-secondary btn-sm" onclick="document.getElementById('import-file').click()">⬆️ Importar CSV</button>
+                    <button class="btn-danger btn-sm" onclick="clearResults()">🗑️ Limpar dados</button>
+                    <button class="btn-secondary btn-sm" onclick="backToIntro()">← Voltar</button>
+                    <button class="btn-primary btn-sm full" onclick="startQuiz()">✏️ Fazer o teste</button>
+                </div>
+
+                <div class="dash-footer">
+                    🔒 Dados <strong>anônimos</strong> salvos apenas neste dispositivo.<br>
+                    Para consolidar respostas de vários celulares, exporte o CSV em cada aparelho e importe tudo num único dispositivo.
+                </div>
+            `;
+        }
+
+        // ============================================================
+        // CSV
+        // ============================================================
+        function exportCSV() {
+            const results = loadResults();
+            if (results.length === 0) { alert('Não há dados para exportar.'); return; }
+            const header = ['id', 'timestamp', ...questions.map((_, i) => 'q' + (i + 1)), 'score'];
+            const rows = [header.join(',')];
+            results.forEach(r => {
+                rows.push([r.id, r.timestamp, ...r.answers, r.score].join(','));
+            });
+            const csv = rows.join('\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `doutrina-basica-iasd-${new Date().toISOString().slice(0, 10)}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importCSV(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const text = e.target.result;
+                    const lines = text.trim().split(/\r?\n/);
+                    if (lines.length < 2) throw new Error('Arquivo vazio');
+                    const header = lines[0].split(',').map(s => s.trim());
+                    const expected = 2 + questions.length + 1;
+                    if (header.length < expected) throw new Error('Cabeçalho inválido');
+
+                    const results = loadResults();
+                    const existingIds = new Set(results.map(r => r.id));
+                    let added = 0, skipped = 0;
+
+                    for (let i = 1; i < lines.length; i++) {
+                        const cols = lines[i].split(',');
+                        if (cols.length < expected) { skipped++; continue; }
+                        const id = cols[0].trim();
+                        if (existingIds.has(id)) { skipped++; continue; }
+
+                        const answers = cols.slice(2, 2 + questions.length).map(x => {
+                            const v = parseInt(x);
+                            return isNaN(v) ? null : v;
+                        });
+                        const score = parseInt(cols[2 + questions.length]);
+                        if (isNaN(score)) { skipped++; continue; }
+
+                        results.push({
+                            id: id,
+                            timestamp: cols[1].trim(),
+                            answers: answers,
+                            score: score
+                        });
+                        existingIds.add(id);
+                        added++;
+                    }
+                    saveResults(results);
+                    alert(`✅ ${added} resultado(s) importado(s).${skipped ? `\n${skipped} ignorado(s).` : ''}`);
+                    renderDashboard();
+                    updateDashboardBadge();
+                } catch (err) {
+                    alert('❌ Erro ao importar. Verifique se é um CSV exportado por este teste.');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        // ============================================================
+        updateDashboardBadge();
+    </script>
+</body>
+</html>
